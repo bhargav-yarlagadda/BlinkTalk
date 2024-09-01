@@ -1,6 +1,6 @@
-import { createContext, useState, useRef, useEffect } from "react";
+import React, { createContext, useState, useRef, useEffect } from "react";
 import { io } from "socket.io-client";
-import Peer from "simple-peer";
+import Peer from "peerjs";
 
 const SocketContext = createContext();
 
@@ -22,13 +22,51 @@ const ContextProvider = ({ children }) => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then((currentStream) => {
         setStream(currentStream);
-        myVideo.current.srcObject = currentStream;
+        if (myVideo.current) {
+          myVideo.current.srcObject = currentStream;
+        }
+      })
+      .catch((error) => {
+        console.error("Error accessing media devices.", error);
       });
 
     socket.on("me", (id) => setMe(id));
     socket.on("calluser", ({ from, name: callerName, signal }) => {
       setCall({ isRecievedCall: true, from, name: callerName, signal });
     });
+
+
+
+    return () => {
+      socket.off("me");
+      socket.off("calluser");
+    };
+  }, []);
+  useEffect(() => {
+  if (myVideo.current) {
+    console.log('myVideo ref:', myVideo.current);
+    console.log('Stream:', stream);
+    myVideo.current.srcObject = stream;
+  }
+}, [stream]);
+
+useEffect(() => {
+  if (userVideo.current) {
+    console.log('userVideo ref:', userVideo.current);
+  }
+}, [userVideo]);
+
+  useEffect(() => {
+    socket.on("callaccepted", (signal) => {
+      if (connectionRef.current) {
+        setCallAccepted(true);
+        connectionRef.current.signal(signal);
+      }
+    });
+
+    return () => {
+      socket.off("callaccepted");
+    };
   }, []);
 
   const answerCall = () => {
@@ -40,10 +78,11 @@ const ContextProvider = ({ children }) => {
     });
 
     peer.on("stream", (currentStream) => {
-      userVideo.current.srcObject = currentStream;
+      if (userVideo.current) {
+        userVideo.current.srcObject = currentStream;
+      }
     });
 
-    peer.signal(call.signal);
     connectionRef.current = peer;
   };
 
@@ -55,12 +94,9 @@ const ContextProvider = ({ children }) => {
     });
 
     peer.on("stream", (currentStream) => {
-      userVideo.current.srcObject = currentStream;
-    });
-
-    socket.on("callaccepted", (signal) => {
-      setCallAccepted(true);
-      peer.signal(signal);
+      if (userVideo.current) {
+        userVideo.current.srcObject = currentStream;
+      }
     });
 
     connectionRef.current = peer;
@@ -68,8 +104,13 @@ const ContextProvider = ({ children }) => {
 
   const leaveCall = () => {
     setCallEnded(true);
-    connectionRef.current.destroy();
-    window.location.reload();
+    if (connectionRef.current) {
+      connectionRef.current.destroy();
+    }
+    setStream(null);
+    setCall({ isRecievedCall: false, from: "", name: "", signal: null });
+    setCallAccepted(false);
+    setCallEnded(false);
   };
 
   return (

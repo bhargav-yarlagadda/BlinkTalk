@@ -6,7 +6,7 @@ const Header = () => {
     <div className='bg-[#e4ebf2] h-screen '>
         
         <div className="flex flex-col sm:flex-row h-full w-full ">
-            <div className="flex  w-full sm:w-1/2 items-center  h-1/2 sm:h-full ">
+            <div className="flex  w-full sm:w-1/2 items-center justify-center h-1/2 sm:h-full ">
           
                 <span className='text-4xl font-mono p-2 text-wrap text-center sm:text-7xl ' >
                     Video Calls and  <br />meetings

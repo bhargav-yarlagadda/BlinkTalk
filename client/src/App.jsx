@@ -5,12 +5,12 @@ import VideoPlayer from './components/VideoPlayer';
 import Header from './components/Header';
 const App = () => {
     return (
-        <div>
+        <div className='overflow-hidden' >
           <Header/>
-            <VideoPlayer />
             <Options>
                 <Notification ></Notification>
             </Options>
+            <VideoPlayer />
         </div>
     );
 };
