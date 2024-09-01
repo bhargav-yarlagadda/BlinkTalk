@@ -1,15 +1,30 @@
-import React, { useContext } from "react";
+import React, { useContext,useEffect } from "react";
 import { SocketContext } from "../SocketContext";
+
 
 const VideoPlayer = () => {
   const { name, callAccepted, myVideo, userVideo, callEnded, stream, call } =
     useContext(SocketContext);
 
+  useEffect(() => {
+    if (myVideo.current) {
+      console.log('Local video ref:', myVideo.current);
+      console.log('Local stream:', stream);
+      myVideo.current.srcObject = stream;
+    }
+  }, [stream]);
+
+  useEffect(() => {
+    if (userVideo.current) {
+      console.log('Remote video ref:', userVideo.current);
+    }
+  }, [userVideo]);
+
   return (
     <div className="w-screen h-screen flex flex-col-reverse sm:flex-row bg-gray-300">
       {stream && (
         <div className="w-full sm:w-1/2 h-1/2 sm:h-full flex flex-col justify-center items-center">
-          <h3 className="m-4" >{name || "You"}</h3>
+          <h3 className="m-4">{name || "You"}</h3>
           <video
             playsInline
             muted
@@ -35,4 +50,4 @@ const VideoPlayer = () => {
   );
 };
 
-export default VideoPlayer;
+export default VideoPlayer

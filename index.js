@@ -21,20 +21,25 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
+  console.log('User connected:', socket.id); // Log when a user connects
   socket.emit("me", socket.id);
 
   socket.on("disconnect", () => {
+    console.log('User disconnected:', socket.id); // Log when a user disconnects
     socket.broadcast.emit("call ended");
   });
 
-  socket.on("calluser", ({ userToCall, signalData, from, name }) => {
+  socket.on("callUser", ({ userToCall, signalData, from, name }) => {
+    console.log('Calling user:', userToCall, 'with signal data:', signalData); // Log call details
     io.to(userToCall).emit("calluser", { signal: signalData, from, name });
   });
 
-  socket.on("answercall", (data) => {
+  socket.on("answerCall", (data) => {
+    console.log('Answering call with signal data:', data.signal); // Log answer details
     io.to(data.to).emit("callaccepted", data.signal);
   });
 });
+
 
 server.listen(PORT, (err) => {
   if (err) {

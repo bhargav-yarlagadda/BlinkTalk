@@ -1,6 +1,6 @@
   import React, { createContext, useState, useRef, useEffect } from "react";
   import { io } from "socket.io-client";
-  import Peer from "peerjs";
+  import {Peer} from "peerjs";
 
   const SocketContext = createContext();
 
@@ -72,36 +72,62 @@
     const answerCall = () => {
       setCallAccepted(true);
       const peer = new Peer({ initiator: false, trickle: false, stream });
-
+    
       peer.on("signal", (data) => {
+        console.log('Sending answer signal:', data);
         socket.emit("answercall", { signal: data, to: call.from });
       });
-
+    
       peer.on("stream", (currentStream) => {
+        console.log('Received remote stream:', currentStream);
         if (userVideo.current) {
           userVideo.current.srcObject = currentStream;
         }
       });
-
+    
+      peer.on("error", (err) => {
+        console.error('PeerJS error in answerCall:', err);
+      });
+    
       connectionRef.current = peer;
     };
-
+    
+    useEffect(() => {
+      socket.on("me", (id) => {
+        console.log('Received ID:', id); // Log received ID
+        setMe(id);
+      });
+    
+      // Cleanup
+      return () => {
+        socket.off("me");
+      };
+    }, []);
     const callUser = (id) => {
+      console.log('callUser function called with ID:', id);
+    
       const peer = new Peer({ initiator: true, trickle: false, stream });
-
+      
       peer.on("signal", (data) => {
+        console.log('Sending call signal:', data);
         socket.emit("calluser", { userToCall: id, signalData: data, from: me, name });
       });
-
+      
       peer.on("stream", (currentStream) => {
+        console.log('Received remote stream:', currentStream);
         if (userVideo.current) {
           userVideo.current.srcObject = currentStream;
         }
       });
-
+    
+      peer.on("error", (err) => {
+        console.error('PeerJS error in call user:', err);
+      });
+    
       connectionRef.current = peer;
     };
-
+    
+    
     const leaveCall = () => {
       setCallEnded(true);
       if (connectionRef.current) {
